@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FFFFFF">
+<title>DukaFlow Insights — Business Report</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#F5F7FA;color:#0F172A;min-height:100vh}
+img.logo{object-fit:contain;border-radius:8px}
+
+/* ============ GATE ============ */
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.gate-card{width:100%;max-width:400px;background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+.gate-card .logo{width:70px;height:70px;margin:0 auto 10px}
+.gate-card h1{font-size:22px;font-weight:800;color:#0F172A}
+.gate-card h1 span{color:#3E8918}
+.gate-card .sub{font-size:11px;letter-spacing:2px;color:#64748B;text-transform:uppercase;margin:4px 0 20px}
+.gate-err{display:none;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;border-radius:10px;padding:10px;font-size:13px;margin-bottom:12px}
+.form-group{margin-bottom:12px;text-align:left}
+.form-label{display:block;font-size:11px;font-weight:700;color:#64748B;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.form-input{width:100%;padding:12px;background:#fff;border:1.5px solid #D1D5DB;border-radius:10px;color:#0F172A;font-size:14px;outline:none}
+.form-input:focus{border-color:#3E8918}
+.btn{border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-green{background:#3E8918;color:#fff}
+.btn-green:hover{background:#347414}
+.btn-sm{padding:8px 14px;font-size:12px;width:auto}
+.btn-outline{background:#fff;border:1.5px solid #D1D5DB;color:#374151}
+
+/* ============ HEADER ============ */
+header{background:#fff;border-bottom:1px solid #E5E7EB;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:50}
+.h-left{display:flex;align-items:center;gap:10px}
+.h-left .logo{width:34px;height:34px}
+.h-left h1{font-size:17px;font-weight:800}
+.h-left h1 span{color:#3E8918}
+.h-left .sub{font-size:10px;color:#64748B}
+.h-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+select.range{background:#fff;border:1.5px solid #D1D5DB;color:#0F172A;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:700}
+#lastSync{font-size:10px;color:#64748B;width:100%;text-align:right}
+
+/* ============ LAYOUT ============ */
+.wrap{max-width:1050px;margin:0 auto;padding:20px}
+.card{background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card h2{font-size:15px;font-weight:800;color:#0F172A;margin-bottom:2px}
+.card .desc{font-size:12px;color:#64748B;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:800px){.grid2{grid-template-columns:1fr}}
+
+/* ============ KPIs ============ */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.kpi .v{font-size:21px;font-weight:800;margin:4px 0;color:#0F172A}
+.kpi .l{font-size:10px;color:#64748B;text-transform:uppercase;letter-spacing:.5px}
+.kpi.green .v{color:#3E8918}.kpi.blue .v{color:#2563EB}.kpi.amber .v{color:#D97706}
+
+/* ============ INSIGHTS ============ */
+.insight-list{list-style:none}
+.insight-list li{padding:9px 12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;margin-bottom:8px;font-size:13.5px;color:#14532D;line-height:1.5}
+.insight-list li.warn{background:#FFFBEB;border-color:#FDE68A;color:#92400E}
+
+/* ============ TABLES ============ */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:8px 8px;border-bottom:2px solid #E5E7EB}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+td{padding:10px 8px;border-bottom:1px solid #F1F5F9;color:#0F172A}
+tbody tr:nth-child(even) td{background:#F9FAFB}
+td .rank{display:inline-block;width:22px;height:22px;border-radius:6px;background:#F0FDF4;color:#3E8918;font-weight:800;font-size:11px;text-align:center;line-height:22px}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800}
+.pill.ok{background:#DCFACE;color:#166534}
+.pill.warn{background:#FEF9C3;color:#854D0E}
+.pill.bad{background:#FEE2E2;color:#991B1B}
+.muted{color:#64748B;font-size:12px}
+
+/* ============ CHART ============ */
+.chart{display:flex;align-items:flex-end;gap:6px;height:150px;padding:0 4px}
+.chart .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.chart .bar{background:#3E8918;border-radius:5px 5px 0 0;min-height:3px}
+.chart .bar:hover{background:#5BB324}
+.chart .lbl{font-size:9px;color:#64748B;text-align:center;margin-top:6px}
+
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#166534;color:#fff;padding:12px 20px;border-radius:10px;font-weight:800;font-size:13px;z-index:4000;display:none;max-width:90%;text-align:center}
+.toast.error{background:#DC2626}
+.toast.show{display:block}
+</style>
+</head>
+<body>
+
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="df-logo" viewBox="0 0 120 120">
+    <defs><linearGradient id="dfg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7AC943"/><stop offset="1" stop-color="#3E8918"/>
+    </linearGradient></defs>
+    <rect x="4" y="50" width="22" height="9" rx="4.5" fill="url(#dfg)"/>
+    <rect x="0" y="64" width="28" height="9" rx="4.5" fill="url(#dfg)"/>
+    <rect x="8" y="78" width="18" height="9" rx="4.5" fill="url(#dfg)"/>
+    <path d="M48 32 v-8 a14 14 0 0 1 28 0 v8" fill="none" stroke="url(#dfg)" stroke-width="9" stroke-linecap="round"/>
+    <rect x="32" y="30" width="62" height="64" rx="12" fill="url(#dfg)"/>
+    <path d="M52 92 C60 70 66 62 92 48" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+    <path d="M60 94 C68 78 76 72 94 64" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<!-- ============ GATE ============ -->
+<div id="gate">
+  <div class="gate-card">
+    <img class="logo" src="logo.png" onerror="logoErr(this)" alt="DukaFlow">
+    <h1>Duka<span>Flow</span> Insights</h1>
+    <div class="sub">Business Report • Private</div>
+    <div class="gate-err" id="gateErr"></div>
+    <div class="form-group"><label class="form-label">Passcode</label>
+      <input type="password" class="form-input" id="gatePass" placeholder="Founder passcode"></div>
+    <div class="form-group"><label class="form-label">Supabase URL</label>
+      <input type="text" class="form-input" id="gateUrl" placeholder="https://xxxx.supabase.co"></div>
+    <div class="form-group"><label class="form-label">Supabase Anon Key</label>
+      <input type="text" class="form-input" id="gateKey" placeholder="Same keys as shop app"></div>
+    <button class="btn btn-green" onclick="tryGate()">🔓 Open Report</button>
+  </div>
+</div>
+
+<!-- ============ REPORT ============ -->
+<div id="app" style="display:none">
+<header>
+  <div class="h-left">
+    <img class="logo" src="logo.png" onerror="logoErr(this)" alt="DukaFlow">
+    <div><h1>Duka<span>Flow</span> Insights</h1><div class="sub">v2.0 • Business Report</div></div>
+  </div>
+  <div class="h-right">
+    <select class="range" id="rangeSel" onchange="RANGE=this.value;renderAll()">
+      <option value="today">Today</option>
+      <option value="7" selected>Last 7 days</option>
+      <option value="30">Last 30 days</option>
+      <option value="all">All time</option>
+    </select>
+    <button class="btn btn-green btn-sm" onclick="loadData()">🔄 Refresh</button>
+    <button class="btn btn-outline btn-sm" onclick="exportCSV()">⬇️ CSV</button>
+    <button class="btn btn-outline btn-sm" onclick="lockApp()">🔒 Lock</button>
+    <div id="lastSync"></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>💡 Auto-Insights</h2>
+    <div class="desc">Plain-English summary of what your data is saying right now.</div>
+    <ul class="insight-list" id="insights"></ul>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi green"><div class="l">Shops Reporting</div><div class="v" id="kShops">0</div></div>
+    <div class="kpi blue"><div class="l">Active This Week</div><div class="v" id="kActive">0</div></div>
+    <div class="kpi"><div class="l">Units Sold</div><div class="v" id="kUnits">0</div></div>
+    <div class="kpi green"><div class="l">Revenue (UGX)</div><div class="v" id="kRev">0</div></div>
+    <div class="kpi blue"><div class="l">Transactions</div><div class="v" id="kTx">0</div></div>
+  </div>
+
+  <div class="card">
+    <h2>📈 Sales Trend</h2>
+    <div class="desc">Money collected per day, last 14 days. Taller bar = better day.</div>
+    <div class="chart" id="chart"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>🏆 Best Selling Products</h2>
+      <div class="desc">What customers are buying most, ranked.</div>
+      <div id="topProducts"></div>
+    </div>
+    <div class="card">
+      <h2>🗂️ Category Performance</h2>
+      <div class="desc">Which product groups make the most money.</div>
+      <div id="byCategory"></div>
+    </div>
+    <div class="card">
+      <h2>🗺️ Sales by Region</h2>
+      <div class="desc">Where in the country your sales happen.</div>
+      <div id="byRegion"></div>
+    </div>
+    <div class="card">
+      <h2>💳 How Customers Pay</h2>
+      <div class="desc">Cash vs mobile money split.</div>
+      <div id="byPayment"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🚨 Restock Alerts</h2>
+    <div class="desc">Products selling fast but running out across shops. This is what factories pay to know.</div>
+    <div id="restock"></div>
+  </div>
+
+  <div class="card">
+    <h2>🏪 Shop Report Card</h2>
+    <div class="desc">Every shop, ranked by revenue. ACTIVE = sold something this week.</div>
+    <div id="shopTable"></div>
+  </div>
+
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ================================================================
+//  DUKAFLOW INSIGHTS v2.0 — CLEAN REPORT
+//  CHANGE YOUR PASSCODE HERE:
+var PASSCODE='flow2026';
+// ================================================================
+var LS='dfi_';
+var sb=null, RANGE='7';
+var DATA={shops:[],sales:[],products:[]};
+
+window.addEventListener('error',function(e){
+  var el=document.getElementById('gateErr');
+  if(el){el.textContent='⚠️ '+e.message;el.style.display='block';}
+});
+function logoErr(el){
+  if(el.dataset.t===undefined){el.dataset.t='1';el.src='logo.jpg';}
+  else{var s=document.createElement('svg');s.setAttribute('class',el.className);s.innerHTML='<use href="#df-logo"></use>';el.replaceWith(s);}
+}
+function toast(m,e){var t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(e?' error':'');setTimeout(function(){t.className='toast';},3000);}
+function fmt(n){return Number(n||0).toLocaleString();}
+function getSet(){try{return JSON.parse(localStorage.getItem(LS+'set'))||{};}catch(e){return{};}}
+function saveSet(s){localStorage.setItem(LS+'set',JSON.stringify(s));}
+
+function loadLib(){return new Promise(function(res,rej){
+  if(window.supabase&&window.supabase.createClient)return res();
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  s.onload=function(){res();};s.onerror=function(){rej();};
+  document.head.appendChild(s);
+  setTimeout(function(){if(!(window.supabase&&window.supabase.createClient))rej();},12000);
+});}
+async function ensureClient(){
+  var s=getSet();if(!s.url||!s.key)return null;
+  if(sb)return sb;
+  await loadLib();
+  sb=window.supabase.createClient(s.url,s.key);
+  return sb;
+}
+
+window.onload=function(){
+  var s=getSet();
+  if(s.url)document.getElementById('gateUrl').value=s.url;
+  if(s.key)document.getElementById('gateKey').value=s.key;
+  if(localStorage.getItem(LS+'session')==='1'&&s.url)enterApp();
+};
+function tryGate(){
+  var err=document.getElementById('gateErr');
+  if(document.getElementById('gatePass').value!==PASSCODE){err.textContent='Wrong passcode.';err.style.display='block';return;}
+  var url=document.getElementById('gateUrl').value.trim();
+  var key=document.getElementById('gateKey').value.trim();
+  if(!url||!key){err.textContent='Paste your Supabase URL and anon key.';err.style.display='block';return;}
+  saveSet({url:url,key:key});
+  localStorage.setItem(LS+'session','1');
+  enterApp();
+}
+function enterApp(){
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadData();
+}
+function lockApp(){localStorage.removeItem(LS+'session');location.reload();}
+
+async function loadData(){
+  try{
+    var c=await ensureClient();
+    if(!c){toast('Add Supabase keys first',true);return;}
+    document.getElementById('lastSync').textContent='Loading...';
+    var a=await c.from('shops').select('*');
+    var b=await c.from('sales').select('*');
+    var d=await c.from('products').select('*');
+    DATA.shops=a.data||[];DATA.sales=b.data||[];DATA.products=d.data||[];
+    document.getElementById('lastSync').textContent='Updated '+new Date().toLocaleTimeString();
+    renderAll();
+  }catch(e){toast('Load error: '+e.message,true);}
+}
+function shopMap(){var m={};DATA.shops.forEach(function(s){m[s.id]=s;});return m;}
+function rangeStart(){
+  var n=new Date();
+  if(RANGE==='today')return new Date(n.getFullYear(),n.getMonth(),n.getDate());
+  if(RANGE==='7')return new Date(Date.now()-7*86400000);
+  if(RANGE==='30')return new Date(Date.now()-30*86400000);
+  return null;
+}
+function fSales(){
+  var st=rangeStart();if(!st)return DATA.sales;
+  return DATA.sales.filter(function(s){return new Date(s.sale_date)>=st;});
+}
+function table(el,headers,rows){
+  document.getElementById(el).innerHTML=rows.length?
+    '<table><thead><tr>'+headers.map(function(h,i){return '<th class="'+(i>0?'num':'')+'">'+h+'</th>';}).join('')+'</tr></thead><tbody>'+
+    rows.map(function(r){return '<tr>'+r.map(function(c,i){return '<td class="'+(i>0?'num':'')+'">'+c+'</td>';}).join('')+'</tr>';}).join('')+
+    '</tbody></table>'
+    :'<p class="muted">No data in this period yet.</p>';
+}
+
+function renderAll(){
+  var fs=fSales(), sm=shopMap();
+  var units=0,rev=0;
+  fs.forEach(function(s){units+=Number(s.quantity)||0;rev+=Number(s.total)||0;});
+  var week=new Date(Date.now()-7*86400000);
+  var active={};
+  DATA.sales.forEach(function(s){if(new Date(s.sale_date)>=week)active[s.shop_id]=1;});
+  document.getElementById('kShops').textContent=fmt(DATA.shops.length);
+  document.getElementById('kActive').textContent=fmt(Object.keys(active).length);
+  document.getElementById('kUnits').textContent=fmt(units);
+  document.getElementById('kRev').textContent=fmt(rev);
+  document.getElementById('kTx').textContent=fmt(fs.length);
+
+  renderInsights(fs,sm,units,rev,active);
+  renderChart();
+
+  // Top products
+  var agg={};
+  fs.forEach(function(s){agg[s.product_name]=agg[s.product_name]||{q:0,r:0};agg[s.product_name].q+=Number(s.quantity)||0;agg[s.product_name].r+=Number(s.total)||0;});
+  var top=Object.keys(agg).map(function(k){return{n:k,q:agg[k].q,r:agg[k].r};}).sort(function(a,b){return b.q-a.q;}).slice(0,8);
+  table('topProducts',['Product','Units','Revenue (UGX)'],
+    top.map(function(t,i){return ['<span class="rank">'+(i+1)+'</span> '+t.n,fmt(t.q),fmt(t.r)];}));
+
+  // Categories
+  var catOf={};DATA.products.forEach(function(p){catOf[p.name]=p.category;});
+  var cg={};
+  fs.forEach(function(s){var c=catOf[s.product_name]||'Other';cg[c]=cg[c]||{q:0,r:0};cg[c].q+=Number(s.quantity)||0;cg[c].r+=Number(s.total)||0;});
+  var cats=Object.keys(cg).map(function(k){return{n:k,q:cg[k].q,r:cg[k].r};}).sort(function(a,b){return b.r-a.r;});
+  table('byCategory',['Category','Units','Revenue (UGX)','Share'],
+    cats.map(function(c){return [c.n,fmt(c.q),fmt(c.r),(rev?Math.round(c.r/rev*100):0)+'%'];}));
+
+  // Regions
+  var rg={};
+  fs.forEach(function(s){var sh=sm[s.shop_id];var r=(sh&&sh.location)||'Unknown';rg[r]=rg[r]||{q:0,r:0};rg[r].q+=Number(s.quantity)||0;rg[r].r+=Number(s.total)||0;});
+  var regs=Object.keys(rg).map(function(k){return{n:k,q:rg[k].q,r:rg[k].r};}).sort(function(a,b){return b.r-a.r;});
+  table('byRegion',['Region','Units','Revenue (UGX)','Share'],
+    regs.map(function(c){return [c.n,fmt(c.q),fmt(c.r),(rev?Math.round(c.r/rev*100):0)+'%'];}));
+
+  // Payments
+  var pg={};
+  fs.forEach(function(s){var p=s.payment||'Cash';pg[p]=pg[p]||0;pg[p]++;});
+  var pays=Object.keys(pg).map(function(k){return{n:k,q:pg[k]};}).sort(function(a,b){return b.q-a.q;});
+  table('byPayment',['Method','Transactions','Share'],
+    pays.map(function(c){return [c.n,fmt(c.q),(fs.length?Math.round(c.q/fs.length*100):0)+'%'];}));
+
+  renderRestock();
+  renderShops(sm);
+}
+
+function renderInsights(fs,sm,units,rev,active){
+  var el=document.getElementById('insights');
+  if(!fs.length){el.innerHTML='<li>No sales in this period yet. Record sales in the shop app, then press Refresh.</li>';return;}
+  var agg={};
+  fs.forEach(function(s){agg[s.product_name]=agg[s.product_name]||{q:0};agg[s.product_name].q+=Number(s.quantity)||0;});
+  var topP=Object.keys(agg).sort(function(a,b){return agg[b].q-agg[a].q;})[0];
+  var rg={};
+  fs.forEach(function(s){var sh=sm[s.shop_id];var r=(sh&&sh.location)||'Unknown';rg[r]=rg[r]||0;rg[r]+=Number(s.total)||0;});
+  var topR=Object.keys(rg).sort(function(a,b){return rg[b]-rg[a];})[0];
+  var pg={};
+  fs.forEach(function(s){var p=s.payment||'Cash';pg[p]=pg[p]||0;pg[p]++;});
+  var topPay=Object.keys(pg).sort(function(a,b){return pg[b]-pg[a];})[0];
+  var payPct=Math.round(pg[topPay]/fs.length*100);
+  var lines=[
+    '🏆 <b>'+topP+'</b> is your best seller with <b>'+fmt(agg[topP].q)+' units</b> sold in this period.',
+    '🗺️ <b>'+topR+'</b> is your strongest region, contributing <b>UGX '+fmt(rg[topR])+'</b>.',
+    '💳 <b>'+payPct+'%</b> of transactions are paid with <b>'+topPay+'</b>.',
+    '🏪 <b>'+Object.keys(active).length+'</b> of <b>'+DATA.shops.length+'</b> shops sold something this week.'
+  ];
+  // restock warning
+  var stock={};DATA.products.forEach(function(p){stock[p.name]=(stock[p.name]||0)+Number(p.stock)||0;});
+  var week=new Date(Date.now()-7*86400000);
+  var sold={};
+  DATA.sales.forEach(function(s){if(new Date(s.sale_date)>=week)sold[s.product_name]=(sold[s.product_name]||0)+Number(s.quantity)||0;});
+  var worst=null;
+  Object.keys(sold).forEach(function(k){
+    var perDay=sold[k]/7; if(perDay<=0)return;
+    var days=(stock[k]||0)/perDay;
+    if(!worst||days<worst.days)worst={n:k,days:Math.round(days)};
+  });
+  if(worst&&worst.days<=7){
+    lines.push('🚨 Warning: <b>'+worst.n+'</b> has only about <b>'+worst.days+' days</b> of stock left at current sales speed. Factories should restock now.');
+  }
+  el.innerHTML=lines.map(function(l,i){return '<li class="'+(i===lines.length-1&&worst&&worst.days<=7?'warn':'')+'">'+l+'</li>';}).join('');
+}
+
+function renderChart(){
+  var days=[];
+  for(var i=13;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);
+    var ds=d.toISOString().split('T')[0];
+    var v=DATA.sales.filter(function(s){return (s.sale_date||'').slice(0,10)===ds;})
+      .reduce(function(a,b){return a+Number(b.total)||0;},0);
+    days.push({l:d.getDate(),v:v});}
+  var max=Math.max.apply(null,days.map(function(x){return x.v;}).concat([1]));
+  document.getElementById('chart').innerHTML=days.map(function(x){
+    return '<div class="col"><div class="bar" style="height:'+((x.v/max)*100)+'%" title="UGX '+fmt(x.v)+'"></div><div class="lbl">'+x.l+'</div></div>';
+  }).join('');
+}
+
+function renderRestock(){
+  var stock={};
+  DATA.products.forEach(function(p){stock[p.name]=(stock[p.name]||0)+Number(p.stock)||0;});
+  var week=new Date(Date.now()-7*86400000);
+  var sold={};
+  DATA.sales.forEach(function(s){if(new Date(s.sale_date)>=week)sold[s.product_name]=(sold[s.product_name]||0)+Number(s.quantity)||0;});
+  var rows=Object.keys(sold).map(function(k){
+    var st=stock[k]||0,wk=sold[k],perDay=wk/7;
+    var days=perDay>0?Math.round(st/perDay):(st>0?999:0);
+    return{n:k,stock:st,week:wk,days:days};
+  }).sort(function(a,b){return a.days-b.days;}).slice(0,8);
+  table('restock',['Product','Sold (7 days)','Stock in shops','Days left','Status'],
+    rows.map(function(r){
+      var pill=r.days<=3?'<span class="pill bad">RESTOCK NOW</span>':(r.days<=7?'<span class="pill warn">RUNNING LOW</span>':'<span class="pill ok">HEALTHY</span>');
+      return ['<b>'+r.n+'</b>',fmt(r.week),fmt(r.stock),'~'+r.days,pill];
+    }));
+}
+
+function renderShops(sm){
+  var agg={};
+  DATA.sales.forEach(function(s){
+    agg[s.shop_id]=agg[s.shop_id]||{u:0,r:0,last:null};
+    agg[s.shop_id].u+=Number(s.quantity)||0;agg[s.shop_id].r+=Number(s.total)||0;
+    if(!agg[s.shop_id].last||s.sale_date>agg[s.shop_id].last)agg[s.shop_id].last=s.sale_date;
+  });
+  var rows=DATA.shops.map(function(sh){
+    var a=agg[sh.id]||{u:0,r:0,last:null};
+    var active=a.last&&new Date(a.last)>=new Date(Date.now()-7*86400000);
+    return{sh:sh,a:a,active:active};
+  }).sort(function(x,y){return y.a.r-x.a.r;});
+  table('shopTable',['Shop','Location','Units','Revenue (UGX)','Last sale','Status'],
+    rows.map(function(r){
+      return ['<b>'+r.sh.shop_name+'</b>',r.sh.location||'—',fmt(r.a.u),fmt(r.a.r),
+        r.a.last?new Date(r.a.last).toLocaleDateString():'—',
+        r.active?'<span class="pill ok">ACTIVE</span>':'<span class="pill warn">QUIET</span>'];
+    }));
+}
+
+function exportCSV(){
+  var sm=shopMap(),fs=fSales();
+  var lines=['date,shop,location,product,quantity,total,payment,customer'];
+  fs.forEach(function(s){
+    var sh=sm[s.shop_id]||{};
+    lines.push([(s.sale_date||'').slice(0,10),
+      '"'+(sh.shop_name||'').replace(/"/g,'')+'"',
+      '"'+(sh.location||'').replace(/"/g,'')+'"',
+      '"'+(s.product_name||'').replace(/"/g,'')+'"',
+      s.quantity,s.total,s.payment,'"'+(s.customer||'').replace(/"/g,'')+'"'].join(','));
+  });
+  var blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='dukaflow-report.csv';
+  a.click();
+  toast('Report exported ⬇️');
+}
+</script>
+</body>
+</html>

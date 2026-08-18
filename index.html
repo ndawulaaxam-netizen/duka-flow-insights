@@ -63,22 +63,7 @@
 <div class="card"><h3>⛔ Remove Shops</h3><div id="rs"></div></div>
 </div>
 </div>
-<script>
-var PIN='2026';
-function unlock(){
-if(document.getElementById('pw').value===PIN){
-sessionStorage.setItem('dfok','1');
-openDash();
-}else{
-document.getElementById('pe').innerText='Wrong PIN. Try again.';
-}
-}
-function openDash(){
-document.getElementById('pin').style.display='none';
-document.getElementById('app').className='';
-}
-if(sessionStorage.getItem('dfok')==='1'){openDash();}
-</script>
+<script src="app0.js"></script>
 <script src="app1.js"></script>
 <script src="app2.js"></script>
 <script src="app3.js"></script>

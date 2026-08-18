@@ -1,3 +1,18 @@
+function shopsList(){
+var h='';
+H.forEach(function(x){
+var c=0,v=0;
+S.forEach(function(y){
+if(y.shop_id==x.id){c++;v+=amt(y);}});
+h+='<div class="shop"><b>'+sname(x)+
+'</b><div class="row"><span>'+c+
+' sales · '+(x.owner_name||'')+
+'</span><b>UGX '+v.toLocaleString()+
+'</b></div></div>';
+});
+document.getElementById('sh').innerHTML=
+h||'<p>No shops yet.</p>';
+}
 function tab(n){
 for(var i=1;i<=3;i++){
 document.getElementById('p'+i).className=
@@ -47,7 +62,7 @@ var rows=[['Date','Location','Product','Qty','UGX','Payment']];
 S.forEach(function(x){
 rows.push([String(x.created_at||'').slice(0,10),
 loc(x.shop_id),x.product_name||'Item',
-x.quantity||1,amt(x),x.payment_method||'Cash']);});
+x.quantity||1,amt(x),pay(x)]);});
 var csv=rows.map(function(r){return r.join(',')}).join('\n');
 var a=document.createElement('a');
 a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));

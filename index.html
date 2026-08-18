@@ -30,7 +30,7 @@
 <div class="card"><h3>🛒 Latest Sales</h3><div id="s"></div></div>
 </div>
 <div id="p2" class="pg hid">
-<div class="card"><h3>🏪 Shop Report Cards</h3><div id="sh"></div></div>
+<div class="card"><h3>🏪 Shop Performance</h3><div id="sh"></div></div>
 </div>
 <div id="p3" class="pg hid">
 <div class="card"><h3>🗑️ Delete Bad Sales</h3><div id="ds"></div></div>
@@ -39,6 +39,20 @@
 <script src="app1.js"></script>
 <script src="app2.js"></script>
 <script>
+var E=[];
+addEventListener('load',function(){fe();});
+async function fe(){
+if(!window.sb){setTimeout(fe,800);return;}
+try{
+var r=await sb.from('expenses').select('*');
+E=r.data||[];
+shopsList();
+}catch(e){setTimeout(fe,3000);}
+}
+function eamt(x){
+return Number(x.amount||x.total_amount||
+x.cost||x.value||0)||0;
+}
 function tab(n){
 for(var i=1;i<4;i++){
 var p=document.getElementById('p'+i);
@@ -49,13 +63,20 @@ b[j].className=(j==n-1)?'tb on':'tb';}}
 function shopsList(){
 var h='';
 H.forEach(function(x){
-var c=0,v=0;
+var c=0,v=0,ex=0;
 S.forEach(function(y){
 if(y.shop_id==x.id){c++;v+=amt(y);}});
-h+='<div class="shop"><b>'+sname(x)+
-'</b> · '+c+' sales · UGX '+
-v.toLocaleString()+'<br><small>'+
-(x.owner_name||'')+'</small></div>';});
+E.forEach(function(y){
+if(y.shop_id==x.id){ex+=eamt(y);}});
+h+='<div class="shop"><b>'+sname(x)+'</b>'+
+'<div class="row"><span>🛒 '+c+
+' sales</span><b>UGX '+v.toLocaleString()+
+'</b></div>'+
+'<div class="row"><span>💸 expenses</span><b>UGX '+
+ex.toLocaleString()+'</b></div>'+
+'<div class="row"><span>📊 money left</span><b>UGX '+
+(v-ex).toLocaleString()+'</b></div>'+
+'<small>'+(x.owner_name||'')+'</small></div>';});
 document.getElementById('sh').innerHTML=
 h||'<p>No shops yet.</p>';}
 function adminLists(){

@@ -1,0 +1,18 @@
+body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:14px}
+.top h1{margin:0;font-size:22px}
+#m{color:#93c5fd;background:#1e293b;padding:10px;border-radius:10px;border-left:4px solid #3b82f6}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.kpi{background:linear-gradient(135deg,#1e293b,#334155);border-radius:14px;padding:14px;text-align:center}
+.kpi b{display:block;font-size:20px;color:#4ade80}
+.kpi span{font-size:11px;color:#94a3b8;text-transform:uppercase}
+.tabs{display:flex;gap:8px;margin:12px 0}
+.tb{flex:1;background:#1e293b;color:#94a3b8;border:0;border-radius:10px;padding:10px;font-weight:700}
+.tb.on{background:#3b82f6;color:#fff}
+.card{background:#1e293b;border-radius:14px;padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 10px;font-size:14px;color:#93c5fd}
+.row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #334155;font-size:13px;gap:8px}
+.row b{color:#4ade80}
+.act{background:#ef4444;color:#fff;border:0;border-radius:8px;padding:6px 10px}
+.go{background:#16a34a;color:#fff;border:0;border-radius:10px;padding:12px;width:100%;font-weight:700}
+.hid{display:none}
+.shop{background:#0f172a;border-radius:10px;padding:10px;margin-bottom:8px}

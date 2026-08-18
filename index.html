@@ -7,32 +7,10 @@
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-#pin{position:fixed;inset:0;background:#0f172a;display:flex;align-items:center;justify-content:center;z-index:99}
-.pcard{background:#1e293b;padding:24px;border-radius:16px;width:80%;max-width:320px;text-align:center}
-.pcard input{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:18px;text-align:center;margin-bottom:10px;box-sizing:border-box}
-.rb{flex:1;background:#1e293b;color:#94a3b8;border:0;border-radius:10px;padding:8px;font-weight:700}
-.rb.on{background:#16a34a;color:#fff}
-</style>
 </head>
 <body>
-<div id="pin">
-<div class="pcard">
-<h2>🔒 Founder PIN</h2>
-<input id="pw" type="password" inputmode="numeric" placeholder="4-digit PIN">
-<button class="go" onclick="unlock()">Unlock</button>
-<p id="pe" style="color:#f87171"></p>
-</div>
-</div>
-<div id="app" class="hid">
 <div class="top"><h1>📊 DukaFlow Insights</h1></div>
 <p id="m">⏳ Loading...</p>
-<div class="tabs">
-<button class="rb on" data-d="0" onclick="setRange(0)">All</button>
-<button class="rb" data-d="1" onclick="setRange(1)">Today</button>
-<button class="rb" data-d="7" onclick="setRange(7)">7 Days</button>
-<button class="rb" data-d="30" onclick="setRange(30)">30 Days</button>
-</div>
 <div class="kpis">
 <div class="kpi"><b id="k1">0</b><span>Revenue UGX</span></div>
 <div class="kpi"><b id="k2">0</b><span>Shops</span></div>
@@ -47,26 +25,83 @@
 <div id="p1" class="pg">
 <div class="card"><h3>📈 14-Day Revenue</h3><canvas id="ch"></canvas></div>
 <div class="card"><h3>🏆 Top Products</h3><div id="tp"></div></div>
-<div class="card"><h3>📍 Region Ranking</h3><div id="rg"></div></div>
 <div class="card"><h3>💳 Payment Mix</h3><div id="pm"></div></div>
-<div class="card"><h3>📦 Restock Alerts</h3><div id="ra"></div></div>
 <div class="card"><h3>🛒 Latest Sales</h3><div id="s"></div></div>
 </div>
 <div id="p2" class="pg hid">
-<div class="card"><h3>🧾 Money Truth</h3><div id="ev"></div></div>
 <div class="card"><h3>🏪 Shop Report Cards</h3><div id="sh"></div></div>
 </div>
 <div id="p3" class="pg hid">
-<div class="card"><h3>📥 Factory Report (anonymized)</h3>
+<div class="card"><h3>📥 Factory Report</h3>
 <button class="go" onclick="exp()">📥 Download CSV</button></div>
 <div class="card"><h3>🗑️ Delete Bad Sales</h3><div id="ds"></div></div>
 <div class="card"><h3>⛔ Remove Shops</h3><div id="rs"></div></div>
 </div>
-</div>
-<script src="app0.js"></script>
 <script src="app1.js"></script>
 <script src="app2.js"></script>
-<script src="app3.js"></script>
-<script src="app4.js"></script>
+<script>
+function shopsList(){
+var h='';
+H.forEach(function(x){
+var c=0,v=0;
+S.forEach(function(y){
+if(y.shop_id==x.id){c++;v+=amt(y);}});
+h+='<div class="shop"><b>'+sname(x)+
+'</b><div class="row"><span>'+c+
+' sales · '+(x.owner_name||'')+
+'</span><b>UGX '+v.toLocaleString()+
+'</b></div></div>';});
+document.getElementById('sh').innerHTML=
+h||'<p>No shops yet.</p>';}
+function tab(n){
+for(var i=1;i<=3;i++){
+var p=document.getElementById('p'+i);
+if(p){p.className=(i==n)?'pg':'pg hid';}}
+var b=document.getElementsByClassName('tb');
+for(var j=0;j<b.length;j++){
+b[j].className=(j==n-1)?'tb on':'tb';}}
+function adminLists(){
+var d='';
+S.slice(0,15).forEach(function(x){
+d+='<div class="row"><span>'+nm(x.shop_id)+
+' · '+(x.product_name||'Item')+
+'</span><button class="act" onclick="dR(\''+
+x.id+'\')">Del</button></div>';});
+document.getElementById('ds').innerHTML=
+d||'<p>No sales.</p>';
+var r='';
+H.forEach(function(x){
+r+='<div class="row"><span>'+sname(x)+
+' ('+(x.owner_name||'')+
+')</span><button class="act" onclick="dS(\''+
+x.id+'\',\''+esc(sname(x))+
+'\')">Remove</button></div>';});
+document.getElementById('rs').innerHTML=
+r||'<p>No shops.</p>';}
+async function dS(i,n){
+if(!confirm('Remove '+n+' and ALL its data?'))return;
+await sb.from('sales').delete().eq('shop_id',i);
+await sb.from('expenses').delete().eq('shop_id',i);
+var r=await sb.from('shops').delete().eq('id',i);
+alert(r.error?r.error.message:'✅ removed');
+location.reload();}
+async function dR(i){
+if(!confirm('Delete this sale?'))return;
+var r=await sb.from('sales').delete().eq('id',i);
+alert(r.error?r.error.message:'✅ deleted');
+location.reload();}
+async function exp(){
+if(!S.length){alert('No sales yet.');return;}
+var rows=[['Date','Location','Product','Qty','UGX','Payment']];
+S.forEach(function(x){
+rows.push([String(x.created_at||'').slice(0,10),
+loc(x.shop_id),x.product_name||'Item',
+x.quantity||1,amt(x),pay(x)]);});
+var csv=rows.map(function(r){return r.join(',')}).join('\n');
+var a=document.createElement('a');
+a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+a.download='DukaFlow_Factory_Report.csv';
+a.click();}
+</script>
 </body>
 </html>

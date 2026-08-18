@@ -6,6 +6,9 @@ if(!v){v=(Number(x.quantity||1))*
 (Number(x.unit_price||x.price||0));}
 return v||0;
 }
+function pay(x){
+return x.payment_method||x.payment||x.method||'Cash';
+}
 function sname(x){
 return x.name||x.shop_name||x.shopname||x.title||
 x.business_name||x.owner_name||'Shop';
@@ -22,22 +25,77 @@ H[j].region||H[j].district||'Uganda';}}
 return 'Uganda';
 }
 function esc(t){return String(t).replace(/'/g,"\\'")}
+function products(){
+var map={};
+S.forEach(function(x){
+var n=x.product_name||'Item';
+map[n]=(map[n]||0)+amt(x);});
+var arr=[];
+for(var k in map){arr.push([k,map[k]]);}
+arr.sort(function(a,b){return b[1]-a[1];});
+return arr;
+}
 function show(){
 var t=0;
 S.forEach(function(x){t+=amt(x);});
-document.getElementById('k1').innerText=t.toLocaleString();
+document.getElementById('k1').innerText=
+t.toLocaleString();
 document.getElementById('k2').innerText=H.length;
 document.getElementById('k3').innerText=S.length;
 document.getElementById('k4').innerText=
 Math.round(t*0.25).toLocaleString();
-document.getElementById('m').innerText=
-'✅ LIVE: '+S.length+' sales · '+H.length+
-' shops · UGX '+t.toLocaleString();
+insight(t);topProd();payMix();
 salesList();shopsList();adminLists();chart();
+}
+function insight(t){
+var m=document.getElementById('m');
+if(!S.length){m.innerText='✅ Connected! Record sales in the Shop App.';return;}
+var p=products();
+var top=p.length?p[0][0]:'-';
+var mo=0;
+S.forEach(function(x){
+var q=pay(x).toLowerCase();
+if(q.indexOf('momo')>-1||q.indexOf('mtn')>-1||
+q.indexOf('airtel')>-1){mo+=amt(x);}});
+var pc=t?Math.round(mo/t*100):0;
+m.innerText='💡 '+S.length+' sales · UGX '+
+t.toLocaleString()+' · Top product: '+top+
+' · '+pc+'% paid by mobile money';
+}
+function topProd(){
+var p=products().slice(0,5);
+var max=p.length?p[0][1]:1;
+var h='';
+p.forEach(function(r){
+h+='<div class="tt">'+r[0]+'</div>'+
+'<div class="bar"><div class="fill" style="width:'+
+Math.round(r[1]/max*100)+'%"></div></div>'+
+'<div class="gg">UGX '+r[1].toLocaleString()+
+'</div>';
+});
+document.getElementById('tp').innerHTML=
+h||'<p>No data yet.</p>';
+}
+function payMix(){
+var map={};
+S.forEach(function(x){
+var n=pay(x);map[n]=(map[n]||0)+amt(x);});
+var tot=0;
+for(var k in map){tot+=map[k];}
+var h='';
+for(var k in map){
+var pc=tot?Math.round(map[k]/tot*100):0;
+h+='<div class="tt">'+k+'</div>'+
+'<div class="bar"><div class="fill" style="width:'+
+pc+'%"></div></div>'+
+'<div class="gg">'+pc+'%</div>';
+}
+document.getElementById('pm').innerHTML=
+h||'<p>No data yet.</p>';
 }
 function salesList(){
 var h='';
-S.slice(0,15).forEach(function(x){
+S.slice(0,10).forEach(function(x){
 h+='<div class="row"><span>'+nm(x.shop_id)+
 ' · '+(x.product_name||'Item')+
 ' x'+(x.quantity||1)+'</span><b>UGX '+
@@ -45,21 +103,6 @@ amt(x).toLocaleString()+'</b></div>';
 });
 document.getElementById('s').innerHTML=
 h||'<p>No sales yet.</p>';
-}
-function shopsList(){
-var h='';
-H.forEach(function(x){
-var c=0,v=0;
-S.forEach(function(y){
-if(y.shop_id==x.id){c++;v+=amt(y);}});
-h+='<div class="shop"><b>'+sname(x)+
-'</b><div class="row"><span>'+c+
-' sales · '+(x.owner_name||'')+
-'</span><b>UGX '+v.toLocaleString()+
-'</b></div></div>';
-});
-document.getElementById('sh').innerHTML=
-h||'<p>No shops yet.</p>';
 }
 function chart(){
 try{

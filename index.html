@@ -13,8 +13,8 @@ button{background:#ef4444;color:#fff;border:0;border-radius:6px;padding:6px 10px
 </style>
 </head>
 <body>
-<h2>📊 DukaFlow Insights v8</h2>
-<p id="m">⏳ Loading v8...</p>
+<h2>📊 DukaFlow Insights v9</h2>
+<p id="m">⏳ Loading v9...</p>
 <div class="w" id="k"></div>
 <div class="w">
 <h3>🛒 Sales (Del = delete bad record)</h3>
@@ -26,27 +26,42 @@ button{background:#ef4444;color:#fff;border:0;border-radius:6px;padding:6px 10px
 </div>
 <script src="app1.js"></script>
 <script>
+function amt(x){
+var v=Number(x.total_amount||x.amount||x.total||x.sale_amount||x.value||0);
+if(!v){v=(Number(x.quantity||1))*(Number(x.unit_price||x.price||0));}
+return v||0;
+}
+function sname(x){
+return x.name||x.shop_name||x.shopname||x.title||x.owner_name||'Shop';
+}
+function nm(i){
+for(var j=0;j<H.length;j++){if(H[j].id==i){return sname(H[j]);}}
+return '?';
+}
+function esc(t){return String(t).replace(/'/g,"\\'")}
 function show(){
+var t=0;
+S.forEach(function(x){t+=amt(x);});
+document.getElementById('k').innerHTML=
+'✅ '+S.length+' sales | '+H.length+' shops | UGX '+
+t.toLocaleString()+' | profit ~UGX '+
+Math.round(t*0.25).toLocaleString();
 var s='';
 S.slice(0,20).forEach(function(x){
 s+='<p>• '+nm(x.shop_id)+' - '+
 (x.product_name||'Item')+' x'+(x.quantity||1)+
-' - UGX '+(+x.total_amount||0).toLocaleString()+
+' - UGX '+amt(x).toLocaleString()+
 ' <button onclick="dR(\''+x.id+'\')">Del</button></p>';
 });
 document.getElementById('s').innerHTML=s||'<p>No sales yet.</p>';
 var h='';
 H.forEach(function(x){
-h+='<p>• '+(x.name||'?')+' ('+(x.owner_name||'')+') '+
-'<button onclick="dS(\''+x.id+'\',\''+esc(x.name)+'\')">Remove</button></p>';
+h+='<p>• '+sname(x)+' ('+(x.owner_name||'')+') '+
+'<button onclick="dS(\''+x.id+'\',\''+esc(sname(x))+'\')">Remove</button></p>';
 });
 document.getElementById('h').innerHTML=h||'<p>No shops yet.</p>';
+document.getElementById('m').innerText='✅ LIVE v9';
 }
-function nm(i){
-for(var j=0;j<H.length;j++)if(H[j].id==i)return H[j].name;
-return '?';
-}
-function esc(t){return String(t).replace(/'/g,"\\'")}
 async function dS(i,n){
 if(!confirm('Remove '+n+' and its data?'))return;
 await sb.from('sales').delete().eq('shop_id',i);
